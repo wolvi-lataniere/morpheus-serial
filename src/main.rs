@@ -1,11 +1,14 @@
-use std::process::exit;
+use std::ops::Range;
+use std::vec;
+use std::{process::exit, time::Duration, thread};
 
 use morpheus_serial::MorpheusSerial;
-use serialport;
+use morpheus_serial::generated;
+use tokio_serial;
 use getopt::Opt;
 
-fn list_serial_ports() -> Result<(), serialport::Error>{
-    let available = serialport::available_ports()?;
+fn list_serial_ports() -> Result<(), tokio_serial::Error>{
+    let available = tokio_serial::available_ports()?;
 
     println!("{} available serial ports:", available.len());
     available.iter().for_each(|port| {
@@ -64,8 +67,16 @@ fn main() {
 
     println!("Openning {} at {}bps", port.as_ref().unwrap(), baudrate);
     match  MorpheusSerial::new(port.unwrap(), baudrate){
-        Ok(serial) => {
-            serial.close();
+        Ok(mut serial) => {
+            thread::sleep(Duration::from_millis(100));
+            let joiner = serial.receive_frame();
+
+            for _ in 0..20 {
+              thread::sleep(Duration::from_millis(500));
+              serial.send_frame(generated::Instructions::GetVersion {  }).unwrap();
+            }
+
+            joiner.join().unwrap().unwrap();
         }
         Err(error) => {
             eprintln!("Failed openning port: {}", error.to_string())

@@ -7,5 +7,5 @@ maintainer = "Aurelien VALADE <aurelien.valade@balena.io>"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-serialport = "4.2.0"
+tokio-serial = "5.4.3"
 getopt = "1.1.3"
