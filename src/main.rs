@@ -1,10 +1,11 @@
-use std::ops::Range;
-use std::vec;
 use std::{process::exit, time::Duration, thread};
 
 use morpheus_serial::MorpheusSerial;
 use morpheus_serial::generated;
+use std::sync::{Mutex, Arc};
 use tokio_serial;
+use tokio;
+use tokio::signal;
 use getopt::Opt;
 
 fn list_serial_ports() -> Result<(), tokio_serial::Error>{
@@ -29,7 +30,8 @@ fn display_help(name: &String) {
     println!("\t-b BAUDRATE: communication baudrate in bits per second (default 115200)"); 
 }
 
-fn main() {
+#[tokio::main]
+async fn main() {
     println!("Morpheus serial server");
 
     let args: Vec<String> = std::env::args().collect();
@@ -67,16 +69,43 @@ fn main() {
 
     println!("Openning {} at {}bps", port.as_ref().unwrap(), baudrate);
     match  MorpheusSerial::new(port.unwrap(), baudrate){
-        Ok(mut serial) => {
+        Ok((serial, rx_task)) => {
             thread::sleep(Duration::from_millis(100));
-            let joiner = serial.receive_frame();
 
-            for _ in 0..20 {
-              thread::sleep(Duration::from_millis(500));
-              serial.send_frame(generated::Instructions::GetVersion {  }).unwrap();
+            let serial = Arc::new(serial);
+            let serial_clone = serial.clone();
+            let task = tokio::task::spawn(async move{
+                let serial = serial_clone;
+                for _ in 0..20 {
+                    tokio::time::sleep(Duration::from_millis(500)).await;
+                    serial.send_frame(generated::Instructions::GetVersion {  }).await.unwrap();
+                }}
+            );
+
+            let mut rxqueue = serial.rx_queue.resubscribe();
+            let task2 = tokio::task::spawn(async move{
+                loop {
+                    if let Ok(fb) = rxqueue.recv().await {
+                        println!("Received Feedback: {:?}", fb);
+                    }
+                    else {
+                        break;
+                    }
+                }}
+            );
+
+
+            tokio::select! {
+                _ = signal::ctrl_c() => {},
             }
 
-            joiner.join().unwrap().unwrap();
+            serial.tx.send(1).unwrap();
+
+            println!("Waiting task to quit");
+                task.await.unwrap();
+                task2.await.unwrap();
+                rx_task.await.unwrap().unwrap();
+            println!("Done");
         }
         Err(error) => {
             eprintln!("Failed openning port: {}", error.to_string())

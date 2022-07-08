@@ -7,5 +7,7 @@ maintainer = "Aurelien VALADE <aurelien.valade@balena.io>"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+tokio = { version="1.19.2", features= ['full']}
+tokio-io = "0.1.6"
 tokio-serial = "5.4.3"
 getopt = "1.1.3"
