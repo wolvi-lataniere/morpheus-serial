@@ -5,7 +5,6 @@ use crate::generated;
 use crate::MorpheusSerial;
 use tokio;
 
-
 async fn send_get_instruction(serial: MorpheusSerial, inst: generated::Instructions) -> Result<impl warp::reply::Reply, Infallible> {
     let mut rx = serial.rx_queue.resubscribe();
     
@@ -38,4 +37,19 @@ pub fn morpheus_version(serial: &MorpheusSerial) -> impl Filter<Extract = impl w
         .and(with_serial(&serial))
         .and(with_instruction(generated::Instructions::GetVersion {  }))
         .and_then(send_get_instruction)
+}
+
+/// GET /sleep_pin
+pub fn morpheus_sleep_pin(serial: &MorpheusSerial) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection>  + Clone{
+    warp::path!("sleep_pin" / u16)
+        .and(warp::get())
+        .and(with_serial(&serial))
+        .and_then(move |a, ser| {
+            let inst = generated::Instructions::SleepPin { pre_sleep_time: a };
+            send_get_instruction(ser, inst)})
+}
+
+pub fn morpheus_routes(serial: &MorpheusSerial) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
+    morpheus_version(&serial.clone())
+    .or(morpheus_sleep_pin(&serial))
 }

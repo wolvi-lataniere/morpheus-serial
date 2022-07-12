@@ -95,9 +95,10 @@ async fn main() {
                 }}
             );
 
+
             tokio::select! {
                 _ = signal::ctrl_c() => {},
-                _ = warp::serve(routes::morpheus_version(&serial)).run(([0,0,0,0], 5555)) => {}
+                _ = warp::serve(routes::morpheus_routes(&serial)).run(([0,0,0,0], 5555)) => {}
             }
 
             serial.tx.send(1).await.unwrap();
