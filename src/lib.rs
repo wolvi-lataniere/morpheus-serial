@@ -8,6 +8,7 @@ use tokio::sync::{mpsc, broadcast};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use std::time::Duration;
 
+pub mod routes;
 pub mod generated;
 
 
@@ -53,9 +54,15 @@ enum FrameReceptionStats {
 /// let serial = MorpheusSerial::new("/dev/ttyUSB0".into(), 115200).expect("Couldn't open port".into());
 /// ```
 pub struct MorpheusSerial {
-    pub tx: tokio::sync::broadcast::Sender<i32>,
-    pub rx_queue: tokio::sync::broadcast::Receiver<Feedbacks>,
+    pub tx: mpsc::Sender<i32>,
+    pub rx_queue: broadcast::Receiver<Feedbacks>,
     tx_chan: mpsc::Sender<Vec<u8>>
+}
+
+impl Clone for MorpheusSerial {
+    fn clone(&self) -> Self {
+        Self { tx: self.tx.clone(), rx_queue: self.rx_queue.resubscribe(), tx_chan: self.tx_chan.clone() }
+    }
 }
 
 impl MorpheusSerial {
@@ -72,8 +79,8 @@ impl MorpheusSerial {
         match SerialStream::open(&tokio_serial::new(port, baudrate).timeout(Duration::from_millis(10))) {
             Ok(mut port) => {
                 port.set_exclusive(true).unwrap();
-                let (tx, rx) = tokio::sync::broadcast::channel(4);
-                let (tx_chan, rx_chan) = mpsc::channel::<Vec<u8>>(10);
+                let (tx_chan, rx_chan) = mpsc::channel(5);
+                let (tx, rx) = mpsc::channel(4);
                 let (tx_feedback, rx_feedback) = broadcast::channel(5);
 
                 let rx_task = Self::receive_frame(port, rx, rx_chan, tx_feedback);
@@ -103,7 +110,7 @@ impl MorpheusSerial {
         Ok(())
     }
 
-    fn receive_frame(mut serial: SerialStream, mut rx: tokio::sync::broadcast::Receiver<i32>, mut rx_chan: mpsc::Receiver<Vec<u8>>, mut tx_feedback: broadcast::Sender<Feedbacks>) -> task::JoinHandle<Result<(), MorpheusError>>  {
+    fn receive_frame(mut serial: SerialStream, mut rx: mpsc::Receiver<i32>, mut rx_chan: mpsc::Receiver<Vec<u8>>, mut tx_feedback: broadcast::Sender<Feedbacks>) -> task::JoinHandle<Result<(), MorpheusError>>  {
         serial.clear(tokio_serial::ClearBuffer::Input).unwrap();
         serial.write_data_terminal_ready(true).unwrap();
 

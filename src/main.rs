@@ -2,6 +2,7 @@ use std::{process::exit, time::Duration, thread};
 
 use morpheus_serial::MorpheusSerial;
 use morpheus_serial::generated;
+use morpheus_serial::routes;
 use std::sync::{Mutex, Arc};
 use tokio_serial;
 use tokio;
@@ -76,7 +77,7 @@ async fn main() {
             let serial_clone = serial.clone();
             let task = tokio::task::spawn(async move{
                 let serial = serial_clone;
-                for _ in 0..20 {
+                for _ in 0..2 {
                     tokio::time::sleep(Duration::from_millis(500)).await;
                     serial.send_frame(generated::Instructions::GetVersion {  }).await.unwrap();
                 }}
@@ -94,12 +95,12 @@ async fn main() {
                 }}
             );
 
-
             tokio::select! {
                 _ = signal::ctrl_c() => {},
+                _ = warp::serve(routes::morpheus_version(&serial)).run(([0,0,0,0], 5555)) => {}
             }
 
-            serial.tx.send(1).unwrap();
+            serial.tx.send(1).await.unwrap();
 
             println!("Waiting task to quit");
                 task.await.unwrap();
