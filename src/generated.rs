@@ -5,8 +5,8 @@ use serde_derive::Serialize;
 #[derive(PartialEq, Eq, Clone, Serialize, Debug)]
 pub enum Instructions {
     GetVersion{},
-	SleepPin{pre_sleep_time: u16},
-	SleepTime{duration: u32}
+	SleepPin{pre_sleep_time: u16,wake_pin_active_state: bool},
+	SleepTime{pre_sleep_time: u16,duration: u32}
 }
 
 
@@ -60,8 +60,8 @@ impl Instructions {
     pub fn to_bytes(self) -> Vec<u8> {
         match self {
     Self::GetVersion{} => vec![&[0u8] as &[u8],].concat(),
-			Self::SleepPin{pre_sleep_time} => vec![&[3u8] as &[u8],&pre_sleep_time.to_le_bytes()].concat(),
-			Self::SleepTime{duration} => vec![&[4u8] as &[u8],&duration.to_le_bytes()].concat()
+			Self::SleepPin{pre_sleep_time,wake_pin_active_state} => vec![&[3u8] as &[u8],&pre_sleep_time.to_le_bytes(),&[if wake_pin_active_state {1u8} else {0u8}]].concat(),
+			Self::SleepTime{pre_sleep_time,duration} => vec![&[4u8] as &[u8],&pre_sleep_time.to_le_bytes(),&duration.to_le_bytes()].concat()
         }
     }
 
@@ -74,14 +74,16 @@ impl Instructions {
                 ,
 			3u8 => {
                 let pre_sleep_time = u16::from_le_bytes(bytes[1..3].try_into().unwrap());
+				let wake_pin_active_state = bytes[3] != 0u8;
 
-                Ok(Self::SleepPin{pre_sleep_time})
+                Ok(Self::SleepPin{pre_sleep_time, wake_pin_active_state})
             }
                 ,
 			4u8 => {
-                let duration = u32::from_le_bytes(bytes[1..5].try_into().unwrap());
+                let pre_sleep_time = u16::from_le_bytes(bytes[1..3].try_into().unwrap());
+				let duration = u32::from_le_bytes(bytes[3..7].try_into().unwrap());
 
-                Ok(Self::SleepTime{duration})
+                Ok(Self::SleepTime{pre_sleep_time, duration})
             }
                 ,
     _ => Err(())

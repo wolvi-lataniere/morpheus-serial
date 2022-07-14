@@ -41,15 +41,26 @@ pub fn morpheus_version(serial: &MorpheusSerial) -> impl Filter<Extract = impl w
 
 /// GET /sleep_pin
 pub fn morpheus_sleep_pin(serial: &MorpheusSerial) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection>  + Clone{
-    warp::path!("sleep_pin" / u16)
+    warp::path!("sleep_pin" / u16 / bool)
         .and(warp::get())
         .and(with_serial(&serial))
-        .and_then(move |a, ser| {
-            let inst = generated::Instructions::SleepPin { pre_sleep_time: a };
+        .and_then(move |a, level, ser| {
+            let inst = generated::Instructions::SleepPin { pre_sleep_time: a, wake_pin_active_state: level };
+            send_get_instruction(ser, inst)})
+}
+
+/// GET /sleep_time
+pub fn morpheus_sleep_time(serial: &MorpheusSerial) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection>  + Clone{
+    warp::path!("sleep_time" / u16 / u32)
+        .and(warp::get())
+        .and(with_serial(&serial))
+        .and_then(move |a, duration, ser| {
+            let inst = generated::Instructions::SleepTime { pre_sleep_time: a, duration };
             send_get_instruction(ser, inst)})
 }
 
 pub fn morpheus_routes(serial: &MorpheusSerial) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
     morpheus_version(&serial.clone())
     .or(morpheus_sleep_pin(&serial))
+    .or(morpheus_sleep_time(&serial))
 }

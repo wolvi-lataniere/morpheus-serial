@@ -3,6 +3,7 @@ name = "morpheus-serial"
 version = "0.1.0"
 edition = "2021"
 maintainer = "Aurelien VALADE <aurelien.valade@balena.io>"
+incremental = true
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
