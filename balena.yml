@@ -1,0 +1,23 @@
+name: morpheus
+description: >-
+  enables MCU assisted deep-sleep capability for Single Board Computers
+version: 0.1.0
+type: sw.application
+assets:
+  repository:
+    type: blob.asset
+    data:
+      url: 'https://github.com/wolvi-lataniere/morpheus'
+  logo:
+    type: blob.asset
+    data:
+      url: 'https://raw.githubusercontent.com/balenablocks/sensor/master/logo.png'
+data:
+  defaultDeviceType: raspberrypi3
+  supportedDeviceTypes:
+    - raspberry-pi
+    - raspberrypi4-64
+    - fincm3
+    - raspberrypi3
+    - raspberrypi3-64
+    - raspberrypi400-64

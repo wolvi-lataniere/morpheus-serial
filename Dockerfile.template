@@ -1,0 +1,38 @@
+# Rust as the base image
+FROM rust:1.58-slim-buster as builder
+
+# 0. Install dependencies
+RUN apt-get update
+RUN apt-get install -y libudev-dev pkg-config
+
+# 1. Create a new empty shell project
+RUN USER=root cargo new --bin morpheus-serial
+WORKDIR /usr/src/morpheus-serial
+
+# 2. Copy our manifests
+COPY ./Cargo.* ./
+RUN mkdir ./src && echo 'fn main() { println!("Dummy!"); }' > ./src/main.rs
+
+# 3. Build only the dependencies to cache them
+RUN cargo build --release && rm src/*.rs
+
+# 4. Now that the dependency is built, copy your source code
+COPY ./src ./src
+RUN touch -a -m ./src/main.rs
+
+# 5. Build for release.
+RUN cargo build --release --target-dir .
+
+# 6. Chain builds for optimization
+FROM balenalib/%%BALENA_MACHINE_NAME%%-debian:buster-run
+
+WORKDIR /usr/src/morpheus-serial
+
+# 7. Copy the binary
+COPY --from=builder /usr/src/morpheus-serial/release/ ./release
+
+# 8. Copy the static files for the server
+#COPY views/ ./views
+
+# 9. Run the server
+CMD [ "./release/morpheus-serial", "-p", "/dev/ttyACM0" ]
