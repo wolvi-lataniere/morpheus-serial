@@ -1,8 +1,13 @@
-version: "2"
+# Morpheus-block
 
+Morpheus adds the deep sleep capability to your Raspberry Pi project using a microcontroller to control your single-board computer power supply.
+
+## Example `docker-compose.yml`
+
+```
 services:
   morpheus-serial:
-    build: .
+    image: bh.cr/g_aurelien_valade/morpheus-serial
     cap_add:
       - NET_ADMIN
       - SYS_ADMIN
@@ -16,4 +21,5 @@ services:
     environment:
       - SERIAL_PORT="/dev/ttyACM0"
     ports:
-      - "5555:5555"
+      - "5555":"5555"
+```
