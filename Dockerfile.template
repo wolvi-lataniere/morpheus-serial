@@ -35,4 +35,4 @@ COPY --from=builder /usr/src/morpheus-serial/release/ ./release
 #COPY views/ ./views
 
 # 9. Run the server
-CMD [ "./release/morpheus-serial", "-p", "${SERIAL_PORT}" ]
+CMD [ "/bin/bash", "-c", "./release/morpheus-serial -p ${SERIAL_PORT}" ]
