@@ -73,7 +73,21 @@ Here enters _Morpheus_.
 
 _Morpheus_ (named after the [greek god of sleep and dreams](https://en.wikipedia.org/wiki/Morpheus)), is a Raspberry Pi Pico based project designed to interface between your Raspberry Pi power supply and your Raspberry Pi. 
 
+**HERE a visual of RPi pico in between the wall plug and the Pi3**
+
 ### Architecture
+
+The Raspberry Pi Pico (called **Pico** here-after) is a $4 Micro-Controller Unit (MCU) development board, powered by an ultra low power 133MHz Dual Cortex-M0+ processor, with 2MB Flash storage for the program and 264kB of internal RAM and USB communication capabilities. This doesn't seems much compared to the Gigabytes of RAM and storage of the Raspberry Pi 3 (called **Pi** here-after) , and to its multi GHz processors, but this is plenty enough to turn ON and OFF a power supply, keep track of time or read sensors data... and all this for a fraction of the Pi power budget (450mW under full load, down to 6.5mW in sleep mode, compared to the 10+W rating of the Raspberry Pi 4 without sleep capability).
+
+As the Pico is capable of USB communication, it will be connected to the Pi via USB cable for communication. However, as the Pi power supply will be cut, it also needs an external power input of its own.
+
+Thanks to the clever design of this tiny board, a _VSYS_ pin is exposed on its headers, and is a 5V power input, diode protected from the _VBUS_ input (the USB bus power input). This means if you power the board using a 5V power supply on _VSYS_, it will keep running even when the Pi is OFF, and it won't send power to it through the USB port.
+
+We the want to connect one of the GPIO (General Purpose Input/Output) pins of the Pico to the control input of the Pi power supply. We chose GPIO 2 for this purpose, as GPIO 0 and 1 are reserved for the default serial communication bus.
+
+We might want to wake-up the Pi using a button press (or any ON/OFF switching mechanism, like a door sensor or a pressure plate). If this is the cas, you can connect the switch between GPIO 3 and GND.
+
+
 
 ### Usage
 
