@@ -98,15 +98,23 @@ Note that <span style='color:yellow;'>Yellow</span> wires are the 12V power inpu
 
 ### Usage
 
-#### 1. Hardware requirements
+#### 1. Setting up the MCU
 
-#### 2. Setting up the MCU
+First things first: we have to program the Pico with the [Morpheus Firmware](https://github.com/wolvi-lataniere/morpheus-firmware).
 
-#### 3. Adding the block to your project
+1. Start by downloading the [pre-complied UF2 File](https://github.com/wolvi-lataniere/morpheus-firmware/releases/download/v0.1.0/morpheus-serial-v0.1.0.uf2).
 
-#### 4. Using the API
+2. Then, connect the Pico to your computer with a USB cable, **while keeping the BOOTSEL button pressed**. A new USB disk drive called `RPI-RP2` should appear.
 
-#### 5. Using the CLI script
+3. Drag the UF2 file to the disk drive, it should automatically disappear in 3 to 10 seconds.
+
+4. When the disk has disappeared, disconnect the Pico from your computer, it is ready to go.
+
+#### 2. Adding the block to your project
+
+#### 3. Using the API
+
+#### 4. Using the CLI script
 
 
 ## Discussion
