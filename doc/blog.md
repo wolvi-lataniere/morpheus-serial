@@ -87,7 +87,9 @@ As the Pico is capable of USB communication, it will be connected to the Pi via 
 
 Thanks to the clever design of this tiny board, a _VSYS_ pin is exposed on its headers, and is a 5V power input, diode protected from the _VBUS_ input (the USB bus power input). This means if you power the board using a 5V power supply on _VSYS_, it will keep running even when the Pi is OFF, and it won't send power to it through the USB port. This is done using the <span style='color:red;'>Red</span> wire and the 5V voltage regulator (here a 7805, but a higher efficiency one should be preferred).
 
-We the want to connect one of the GPIO (General Purpose Input/Output) pins of the Pico to the control input of the Pi power supply (with <span style='color:green;'>Green</span> wire). We chose GPIO 2 for this purpose, as GPIO 0 and 1 are reserved for the default serial communication bus.
+We the want to connect one of the GPIO (General Purpose Input/Output) pins of the Pico to the control input of the Pi power supply (with <span style='color:green;'>Green</span> wire). **Note in the diagram we are using a BC547 NPN transistor in-line to invert the signal, as the LM2596S control input is active low.**
+
+We chose GPIO 2 for this purpose, as GPIO 0 and 1 are reserved for the default serial communication bus.
 
 We might want to wake-up the Pi using a button press (or any ON/OFF switching mechanism, like a door sensor or a pressure plate). If this is the cas, you can connect the switch between GPIO 3 (<span style='color:cyan;'>Cyan</span> wire from the Pico) and GND (<span style='color:blue;'>Blue</span> wires).
 
@@ -111,6 +113,31 @@ First things first: we have to program the Pico with the [Morpheus Firmware](htt
 4. When the disk has disappeared, disconnect the Pico from your computer, it is ready to go.
 
 #### 2. Adding the block to your project
+
+First step it to add the `morpheus-serial` block to your project. Add the following code to your `docker-compose.yml` file:
+
+```
+morpheus-serial:
+    image: bh.cr/g_aurelien_valade/morpheus-serial
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+      - SYS_RAWIO
+    labels:
+      io.balena.features.supervisor-api: '1'
+      io.balena.features.balena-api: '1'
+      io.balena.features.sysfs: '1'
+      io.balena.features.kernel-modules: '1'
+    privileged: true
+    environment:
+      - "SERIAL_PORT=/dev/ttyACM0"
+    devices:
+      - "/dev/ttyACM0:/dev/ttyACM0"
+    expose:
+      - "5555"
+```
+
+You can adjust the `SERIAL_PORT` variable value, and the shared device if needed, but those should work fine with our configuration (not that the `SERIAL_PORT` variable is pointing to the shared device).
 
 #### 3. Using the API
 
