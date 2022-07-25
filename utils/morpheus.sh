@@ -56,7 +56,7 @@ if [ -z ${MORPHEUS_ADDRESS} ]; then
     usage
 fi
 
-PRE_DELAY=$PRE_DELAY_PARAM:60
+PRE_DELAY=${PRE_DELAY_PARAM:-60}
 
 # Grab the command
 COMMAND=${@:$OPTIND:1}
@@ -68,17 +68,19 @@ fi
 
 
 request() {
-    RESULT=$(curl -X GET "http://${MORPHEUS_ADDRESS}:5555/$1" | jq - $2)
+    RESULT=$(curl -X GET "http://${MORPHEUS_ADDRESS}:5555/$1")
+    echo "READ: ${RESULT}" 1>&2
+    RESULT=$(echo "${RESULT}" | jq $2)
 
     if [ -z ${RESULT} ]; then 
-        echo "ERROR: Failed during request" 1>&2
+        echo "ERROR: Failed during request to http://${MORPHEUS_ADDRESS}:5555/$1" 1>&2
         echo "failed"
     fi
 }
 
 case ${COMMAND} in 
     TimeSleep)
-        DURATION=${@:$OPTIND:2}
+        DURATION=${@:$OPTIND+1:1}
         if [ -z DURATION ]; then
             echo "Error: missing sleep duration" 1>&2
             usage
@@ -93,7 +95,7 @@ case ${COMMAND} in
         ;;
 
     InputSleep)
-        ACTIVE_STATE=${@:$OPTIND:2}
+        ACTIVE_STATE=${@:$OPTIND+1:1}
         if [ -z ACTIVE_STATE ]; then
             echo "Error: missing active state (1 or 0)" 1>&2
             usage

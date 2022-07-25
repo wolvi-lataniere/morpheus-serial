@@ -139,10 +139,46 @@ morpheus-serial:
 
 You can adjust the `SERIAL_PORT` variable value, and the shared device if needed, but those should work fine with our configuration (not that the `SERIAL_PORT` variable is pointing to the shared device).
 
+
 #### 3. Using the API
 
 #### 4. Using the CLI script
 
+To help with the Morpheus API access, you can add the [morpheus.sh](https://raw.githubusercontent.com/wolvi-lataniere/morpheus-serial/main/utils/morpheus.sh) helper script to your project.
+
+Ensure the file will be copied to your application container and will be executable.
+In the `inkyshot` project, we do in by adding these lines after the `COPY` block of the `inkyshot/Dockerfile` file:
+
+```
+COPY morpheus.sh .
+
+RUN chmod +x morpheus.sh
+```
+
+Then, add the `MORPHEUS_ADDR` environment variable to your application container, pointing to the serial block (in `docker-compose.yml`):
+```
+environment:
+      - "MORPHEUS_ADDR=morpheus-serial"
+```
+
+Finally, call the `morpheus.sh` script when your application is ready to sleep, ask the supervisor to halt the device and start a wait loop.
+
+For `inkyshot` we replaced the `cron` part of the `inkyshot/start.sh` script by the following code:
+
+```
+# Request sleep for 1h
+./morpheus.sh -a ${MORPHEUS_ADDR} TimeSleep 1800
+
+# Clean turn-off
+curl -X POST --header "Content-Type:application/json" \
+    "$BALENA_SUPERVISOR_ADDRESS/v1/shutdown?apikey=$BALENA_SUPERVISOR_API_KEY"
+
+# Prevent from quitting
+while :
+do
+  sleep 1h
+done
+```
 
 ## Discussion
 
