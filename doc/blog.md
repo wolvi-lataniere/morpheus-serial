@@ -46,7 +46,7 @@ To keep power consumption as low as possible, the best approach is to:
 6. Go to deep sleep to preserve as much power as possible,
 7. Repeat from [2] on wake-up.
 
-**TODO: Add a state machine visual representation of the process.**
+![Sleep enabled project state machine](./images/SleepEnabledProject.png)
 
 If we apply it to our use-case, we want to:
 
@@ -175,7 +175,7 @@ For `inkyshot` we replaced the `cron` part of the `inkyshot/start.sh` script by 
 
 ```
 # Request sleep for 1h
-./morpheus.sh -a ${MORPHEUS_ADDR} TimeSleep 1800
+./morpheus.sh -a ${MORPHEUS_ADDR} -w TimeSleep 1800
 
 # Clean turn-off
 curl -X POST --header "Content-Type:application/json" \
