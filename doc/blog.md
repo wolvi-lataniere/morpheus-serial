@@ -112,9 +112,15 @@ First things first: we have to program the Pico with the [Morpheus Firmware](htt
 
 4. When the disk has disappeared, disconnect the Pico from your computer, it is ready to go.
 
-#### 2. Adding the block to your project
+#### 2. Prepare the hardware
 
-First step it to add the `morpheus-serial` block to your project. Add the following code to your `docker-compose.yml` file:
+Second step it to build the project is to create the hardware assembly according to the [Architecture] diagram.
+
+**IMPORTANT NOTE: You should set the correct output voltage (5V) using a multimeter BEFORE connecting the supply to the Raspberry Pi.**
+
+#### 3. Adding the block to your project
+
+Then, you can add the `morpheus-serial` block to your project. Add the following code to your `docker-compose.yml` file:
 
 ```
 morpheus-serial:
@@ -141,6 +147,8 @@ You can adjust the `SERIAL_PORT` variable value, and the shared device if needed
 
 
 #### 3. Using the API
+
+The morpheus block exposes a REST API on its TCP port 5555. The [API documentation](./api.md) exposes available commands.
 
 #### 4. Using the CLI script
 
@@ -181,6 +189,7 @@ done
 ```
 
 ## Discussion
+
 
 Consideration for project development:
 - The system state is lost on every power down, you should load/save the state on disk (or other method)

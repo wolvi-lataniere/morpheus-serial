@@ -1,11 +1,12 @@
 #!/bin/bash
 
 function usage() {
-    echo  "Usage:   $0 -a MORPHEUS_ADDRESS [-p PRE_DELAY] COMMAND
+    echo  "Usage:   $0 -a MORPHEUS_ADDRESS [-p PRE_DELAY] [-w] COMMAND
 
 Parameters:
   -a MORPHEUS_ADDRESS: address/name of the docker container running morpheus
   -p PRE_DELAY: Sets the PRE-SLEEP delay, in seconds (default 60)
+  -w: Wait for BalenaCloud connection to check update before sending request
 
 where COMMAND can be:
 
@@ -23,17 +24,37 @@ function check_update() {
    echo ${UPDATE}
 }
 
+function check_vpn_connected() {
+    curl "$BALENA_SUPERVISOR_ADDRESS/v2/device/vpn?apikey=$BALENA_SUPERVISOR_API_KEY" \
+    | jq ".vpn | .connected"
+}
+
+function wait_vpn_connecter() {
+    echo "### Waiting for Cloud connection to be established"
+    while : ; do
+        VPN_CONNECTED=$(check_vpn_connected)
+        if [ ! -z ${VPN_CONNECTED} ]; then
+            if [ ${VPN_CONNECTED} = "true" ]; then
+                return 0
+            fi
+        fi
+        sleep 5
+    done
+}
+
 function wait_for_update() {
     echo "### Checking for pending update"
     CHECK=$(check_update)
-    while [ [ -z ${CHECK} ] || [ "true" = "${CHECK}" ] ]
+    while [ -z "${CHECK}" ] || [ "true" = "${CHECK}" ]
     do
         sleep 5
         CHECK=$(check_update)
     done
 }
 
-while getopts "a:p:h" o; do
+WAIT_VPN=false
+
+while getopts "a:p:hw" o; do
     case $o in
         a)
             MORPHEUS_ADDRESS=${OPTARG}
@@ -43,6 +64,10 @@ while getopts "a:p:h" o; do
             PRE_DELAY_PARAM=${OPTARG}
             ;;
         
+        w)
+            WAIT_VPN=true
+            ;;
+
         *)
             usage
             ;;
@@ -68,15 +93,18 @@ fi
 
 
 request() {
-    RESULT=$(curl -X GET "http://${MORPHEUS_ADDRESS}:5555/$1")
-    echo "READ: ${RESULT}" 1>&2
-    RESULT=$(echo "${RESULT}" | jq $2)
+    RESULT=$(curl -X GET "http://${MORPHEUS_ADDRESS}:5555/$1" | jq "$2")
 
     if [ -z ${RESULT} ]; then 
         echo "ERROR: Failed during request to http://${MORPHEUS_ADDRESS}:5555/$1" 1>&2
         echo "failed"
     fi
 }
+
+if ${WAIT_VPN};then
+    wait_vpn_connecter
+    wait_for_update
+fi
 
 case ${COMMAND} in 
     TimeSleep)
@@ -85,9 +113,10 @@ case ${COMMAND} in
             echo "Error: missing sleep duration" 1>&2
             usage
         fi
+        echo "### Requesting Time Sleep"
         # Request Time sleep
         RESULT=$(request "sleep_time/${PRE_DELAY}/${DURATION}" ".SleepTime | .feedback")
-        if [ "$RESULT" = "true" ]; then
+        if [ "$RESULT" = "1" ]; then
             exit 0
         else
             exit 1
@@ -101,8 +130,9 @@ case ${COMMAND} in
             usage
         fi
         # Request input sleep
+        echo "### Requesting GPIO waked Sleep"
         RESULT=$(request "sleep_pin/${PRE_DELAY}/${ACTIVE_STATE}" ".SleepPin | .success")
-        if [ "$RESULT" = "true" ]; then
+        if [ "$RESULT" = "1" ]; then
             exit 0
         else
             exit 1
