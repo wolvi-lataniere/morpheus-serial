@@ -19,7 +19,9 @@ services:
       io.balena.features.kernel-modules: '1'
     privileged: true
     environment:
-      - SERIAL_PORT="/dev/ttyACM0"
+      - "SERIAL_PORT=/dev/ttyACM0"
+    devices:
+      - "/dev/ttyACM0:/dev/ttyACM0"
     ports:
       - "5555":"5555"
 ```
