@@ -2,19 +2,20 @@
 
 Single board computers (SBCs) are awesome, small, low-power devices, often with wireless connectivity, which makes them ideal for simple **battery operated projects**.
 
-However, when calculating your energy budget, you often come to realize they are not quite low power enough to accommodate for small batteries, or long-time (multiple days/months) operation. We often don't need full-time availability, so why not **putting our computer to sleep to improve our project battery life**?
+However, when calculating your energy budget, you often come to realize they are not quite low power enough to accommodate small batteries, running over a long time (multiple days/months). We often don't need full-time availability, so why not **put our computer to sleep to improve our project battery life**?
 
-In this article, we will discuss a **simple approach to enable deep-sleep capability** on your next battery powered Raspberry Pi (or any SBC-powered) project.
+In this article, I will show you a **simple approach to enable deep-sleep capability** on your next battery powered Raspberry Pi (or any SBC-powered) project, using the _balenaBlock_ Morpheus I created as part of my [balenaLabs Residency](https://www.balena.io/blog/balenalabs-residencies-our-quest-to-improve-onboarding-at-balena/).
 
 ## The study case
 
-During this article, we will use our BalenaLabs [Inkyshot](#resources) project, which perfectly fits the intermittent operation, battery operable use case.
+To demonstrate how it works, I have used our BalenaLabs [Inkyshot](#resources) project, which perfectly fits the intermittent operation, battery operable use case.
 
 ![](https://raw.githubusercontent.com/balenalabs-incubator/inkyshot/master/assets/header-photo.jpg)
 
-To put it in few words, the project at startup will *connect to the internet, pull a new inspirational quote, or your local weather, and then will update the eInk display*, this process is repeated once in a while (generally once every hour), staying idle the rest of the time.
+Here's a quick overview of what Inkyshot does, the project at startup will *connect to the internet, pull a new inspirational quote, or your local weather, and then will update the eInk display*, this process is repeated once in a while (generally once every hour), staying idle the rest of the time.
 
 This project is perfect for battery operation because *eInk display retains the display without power*, which allows us to power down the system entirely to save battery.
+
 
 ## Bill of materials
 
@@ -31,8 +32,13 @@ To reproduce this project, you will need:
 
 You will also need:
 - A soldering iron,
-- some solder,
-- some wires to connect everything.
+- Some solder,
+- Some wires to connect everything.
+
+Finally, on the software side, you need:
+- A [balenaCloud account](https://dashboard.balena-cloud.com),
+- [balenaEtcher](https://www.balena.io/etcher/) to flash your SDCard with the fleet image,
+- Join the [Inkyshot Morpheus Edition](https://hub.balena.io/organizations/g_aurelien_valade/fleets/inkyshot-morpheus-edition) fleet.
 
 ## Our goal
 
@@ -59,7 +65,7 @@ If we apply it to our use-case, we want to:
 
 ### The problem
 
-Doing such an operation cycle is however _not natively supported on RaspberryPies_, as they can't natively go to low power mode. The only way to drastically reduce power consumption is to _shut down the SBC and cut down the power supply_.
+Performing this operation cycle is _not natively supported on RaspberryPi's_, they can't go to low power mode. The only way to drastically reduce power consumption is to _shut down the SBC and cut down the power supply_.
 
 Once the system is shut down, you need manual/external intervention to power it back on.
 
@@ -69,11 +75,9 @@ To reduce the power consumption, a common approach in embedded systems is to cut
 
 Here enters _Morpheus_.
 
-### Presentation
-
 _Morpheus_ (named after the [greek god of sleep and dreams](https://en.wikipedia.org/wiki/Morpheus)), is a Raspberry Pi Pico based project designed to interface between your Raspberry Pi power supply and your Raspberry Pi. 
 
-**HERE a visual of RPi pico in between the wall plug and the Pi3**
+I've developed Morpheus as a _balenaBlock_ to help you integrate it in your own projects.
 
 ### Architecture
 
@@ -87,18 +91,18 @@ As the Pico is capable of USB communication, it will be connected to the Pi via 
 
 Thanks to the clever design of this tiny board, a _VSYS_ pin is exposed on its headers, and is a 5V power input, diode protected from the _VBUS_ input (the USB bus power input). This means if you power the board using a 5V power supply on _VSYS_, it will keep running even when the Pi is OFF, and it won't send power to it through the USB port. This is done using the <span style='color:red;'>Red</span> wire and the 5V voltage regulator (here a 7805, but a higher efficiency one should be preferred).
 
-We the want to connect one of the GPIO (General Purpose Input/Output) pins of the Pico to the control input of the Pi power supply (with <span style='color:green;'>Green</span> wire). **Note in the diagram we are using a BC547 NPN transistor in-line to invert the signal, as the LM2596S control input is active low.**
+Next, we want to connect one of the GPIO (General Purpose Input/Output) pins of the Pico to the control input of the Pi power supply (with <span style='color:green;'>Green</span> wire). **Note in the diagram we are using a BC547 NPN transistor in-line to invert the signal, as the LM2596S control input is active low.**
 
 We chose GPIO 2 for this purpose, as GPIO 0 and 1 are reserved for the default serial communication bus.
 
-We might want to wake-up the Pi using a button press (or any ON/OFF switching mechanism, like a door sensor or a pressure plate). If this is the cas, you can connect the switch between GPIO 3 (<span style='color:cyan;'>Cyan</span> wire from the Pico) and GND (<span style='color:blue;'>Blue</span> wires).
+We might want to wake-up the Pi using a button press (or any ON/OFF switching mechanism, like a door sensor or a pressure plate). If this is the case, you can connect the switch between GPIO 3 (<span style='color:cyan;'>Cyan</span> wire from the Pico) and GND (<span style='color:blue;'>Blue</span> wires).
 
 The output of the controlled Pi power supply (<span style='color:orange;'>Orange</span> wire) is connected to a USB type A connector for convenience, but you also can connect directly to the 5V pin on the Pi header, to a cut Micro-USB wire if preferred.
 
 Note that <span style='color:yellow;'>Yellow</span> wires are the 12V power input for the whole project, and should be connected to a 12V, 1.5A capable power source.
 
 
-### Usage
+### Assembly
 
 #### 1. Setting up the MCU
 
@@ -114,7 +118,7 @@ First things first: we have to program the Pico with the [Morpheus Firmware](#re
 
 #### 2. Prepare the hardware
 
-Second step it to build the project is to create the hardware assembly according to the [Architecture](#architecture) diagram.
+Second step is to build the project is to create the hardware assembly according to the [Architecture](#architecture) diagram.
 
 **IMPORTANT NOTE: You should set the correct output voltage (5V) using a multimeter BEFORE connecting the supply to the Raspberry Pi.**
 
@@ -155,7 +159,7 @@ The morpheus block exposes a REST API on its TCP port 5555. The [API documentati
 To help with the Morpheus API access, you can add the [morpheus.sh](https://raw.githubusercontent.com/wolvi-lataniere/morpheus-serial/main/utils/morpheus.sh) helper script to your project.
 
 Ensure the file will be copied to your application container and will be executable.
-In the `inkyshot` project, we do in by adding these lines after the `COPY` block of the `inkyshot/Dockerfile` file:
+In the `inkyshot` project, we do it by adding these lines after the `COPY` block of the `inkyshot/Dockerfile` file:
 
 ```
 COPY morpheus.sh .
@@ -203,13 +207,13 @@ The tested hardware is:
 
 ### Standard Inkyshot project
 
-After a high-intensity start-up phase, the consumption settles around 150mA on the 12V line with regular short 250mA spiker, which represents an average consumption of a bit less than **2W**. This value is not affected much with refresh rate.
+After a high-intensity start-up phase, the consumption settles around 150mA on the 12V line with regular short 250mA spiker, which represents an average consumption of a bit less than **2W**. This value is not affected much by refresh rate.
 
 ### Modified Inkyshot project
 
-The main difference with this project is that we have two main consumption profile.
+The main difference with this project is that we have two main consumption profiles.
 
-The total boot-up to shutdown time on the Pi is about 150 seconds, with a main consumption phase of 105 seconds averaging 168mV, so about 360mA under 12V which is about **4.3W**, the other 45 seconds, the power is ramping up and down and can be averaged to half that power.
+The total boot-up to shutdown time on the Pi is about 150 seconds, with a main consumption phase of 105 seconds averaging 168mV. This corresponds to about 360mA under 12V which is about **4.3W**. For the other 45 seconds, the power is ramping up and down and can be averaged to half that power.
 
 Which makes an activation energy budget of
 
@@ -223,7 +227,7 @@ If we expand the sleep cycles to one hour instead of 30 min however, we get an a
 
 ### Equivalent battery life
 
-The battery life will vastly depend on the a large amount of factors, starting with:
+The battery life will vastly depend on a large number of factors, starting with:
 - the battery type, voltage and capacity,
 - the controlled power supplies efficiency and sleep leakage current,
 - the time your project needs to be active to process its data,
@@ -242,22 +246,22 @@ For our use case, with a 30min sleep period, and with the selected components we
 
 ## Discussion
 
-We saw that adding a deep sleep capability to your project is a major improvement for battery operation, giving in our use-case scenario a x5 to x7 improvement in battery life. In order to be effective, you still have to finely tune your project life-cycle, as we see the refresh rate has a major impact on the battery life when sleeping.
+We saw that adding a deep sleep capability to your project is a major improvement for battery operation, giving in our use-case scenario a x5 to x7 improvement in battery life. In order to be effective, you still have to finetune your project life-cycle. As we can see, the refresh rate has a major impact on the battery life when sleeping.
 
-To integrate Morpheus to your project, you still have too keep in mind the following considerations:
-- The system state is lost on every power down, you should load/save the state on disk (or other method),
+To integrate Morpheus into your project, you still have to keep in mind the following considerations:
+- As the system state is lost on every power down, you should load/save the state on disk (or other method),
 - You may want to keep the system running while updates are pending (this is done with the `-w` flag on the helper script).
 
 
 ### Improvements
 
-Morpheus is still in active development, and we already see a some improvement to consider down the road: 
+Morpheus is still in active development, and we already see some improvement to consider down the road: 
 - Putting the Pico in deep sleep to preserve even more power,
 - Shutting down Pico USB while the Pi is not powered, which should also improve power consumption,
 - Adding other sources of wake up (I2C sensor threshold value...),
-- Using other low power MCU to do the deep sleep with other capabilities (Pico W, ESP32C3...).
+- Using other low power MCUs to do the deep sleep with other capabilities (Pico W, ESP32C3...).
 
-If you come with other ideas, you can raise an issue on the project [Morpheus Github Page](https://github.com/wolvi-lataniere/morpheus-serial).
+If you come up with other ideas, please raise an issue on the project [Morpheus Github Page](https://github.com/wolvi-lataniere/morpheus-serial).
 
 ## Resources
 
