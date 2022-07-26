@@ -132,7 +132,7 @@ case ${COMMAND} in
         # Request input sleep
         echo "### Requesting GPIO waked Sleep"
         RESULT=$(request "sleep_pin/${PRE_DELAY}/${ACTIVE_STATE}" ".SleepPin | .success")
-        if [ "$RESULT" = "1" ]; then
+        if [ "$RESULT" = "true" ]; then
             exit 0
         else
             exit 1
