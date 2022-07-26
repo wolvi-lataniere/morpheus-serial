@@ -8,7 +8,7 @@ In this article, we will discuss a **simple approach to enable deep-sleep capabi
 
 ## The study case
 
-During this article, we will use our BalenaLabs [Inkyshot](https://github.com/balenalabs/inkyshot) project, which perfectly fits the intermittent operation, battery operable use case.
+During this article, we will use our BalenaLabs [Inkyshot] project, which perfectly fits the intermittent operation, battery operable use case.
 
 ![](https://raw.githubusercontent.com/balenalabs-incubator/inkyshot/master/assets/header-photo.jpg)
 
@@ -102,7 +102,7 @@ Note that <span style='color:yellow;'>Yellow</span> wires are the 12V power inpu
 
 #### 1. Setting up the MCU
 
-First things first: we have to program the Pico with the [Morpheus Firmware](https://github.com/wolvi-lataniere/morpheus-firmware).
+First things first: we have to program the Pico with the [Morpheus Firmware].
 
 1. Start by downloading the [pre-complied UF2 File](https://github.com/wolvi-lataniere/morpheus-firmware/releases/download/v0.1.0/morpheus-serial-v0.1.0.uf2).
 
@@ -188,17 +188,82 @@ do
 done
 ```
 
+## Results
+
+In order to qualify the consumption improvement on this system, we did some measurements on a standard _Inkyshot_ project[^Inkyshot], and on an _Morpheus_ modified one [^Modified inkyshot].
+
+### Measurement method
+
+In order to measure the power consumption, we hooked a 0.47Ohms resistor in series with the 12V power supply, we then measured the drop voltage across that resistor during operation.
+The tested hardware is:
+- A Raspberry Pi Pico running [Morpheus Firmware] v0.1.0,
+- A Raspberry Pi 3 B+ running the project,
+- A Waveshare 2.13" EInk display Pi Hat,
+- A controlled and un-controlled (for the Pico) 5V power supply composed of 2 independent _Weewooday-5825_ modules.
+
+### Standard Inkyshot project
+
+After a high-intensity start-up phase, the consumption settles around 150mA on the 12V line with regular short 250mA spiker, which represents an average consumption of a bit less than **2W**. This value is not affected much with refresh rate.
+
+### Modified Inkyshot project
+
+The main difference with this project is that we have two main consumption profile.
+
+The total boot-up to shutdown time on the Pi is about 150 seconds, with a main consumption phase of 105 seconds averaging 168mV, so about 360mA under 12V which is about **4.3W**, the other 45 seconds, the power is ramping up and down and can be averaged to half that power.
+
+Which makes an activation energy budget of
+
+4.3W * 105s + 2.15W * 45s = 548J = **15.23Wh**
+
+This cycle is repeated every 30 minutes, with a power consumption during the sleep phase of 14mA under 12V, which equals **0.17W**, with a total power over 30minutes of **0.085Wh**.
+
+The total average consumption of this version is about **0.438W** for our 30min sleep cycle.
+
+If we expand the sleep cycles to one hour instead of 30 min however, we get an average consumption of **0.309W**, the refresh rate having a huge impact on power consumption.
+
+### Equivalent battery life
+
+The battery life will vastly depend on the a large amount of factors, starting with:
+- the battery type, voltage and capacity,
+- the controlled power supplies efficiency and sleep leakage current,
+- the time your project needs to be active to process its data,
+- the frequency at which you wake up your project,
+- the power consumption of external components/add-on cards you are using...
+
+For our use case, with a 30min sleep period, and with the selected components we have, we can approximate:
+
+| Battery                 | Without Morpheus  |  With Morpheus (30min) | With Morpheus (60min) |
+|-------------------------|-------------------|------------------------|-----------------------|
+| 12V 7.2Ah lead battery  |       43h         |     ~197h = ~8days     |   ~279h = ~11.6 days  |
+| 2xCR18650: 7.2V 3Ah     |       10h         |      49h               |         ~70h          | 
+
+
+**Note:** These values are broad approximations based on nominal values, not taking into account efficiency variation with voltage, nor voltage variation during the battery life cycle.
+
 ## Discussion
 
+We saw that adding a deep sleep capability to your project is a major improvement for battery operation, giving in our use-case scenario a x5 to x7 improvement in battery life. In order to be effective, you still have to finely tune your project life-cycle, as we see the refresh rate has a major impact on the battery life when sleeping.
 
-Consideration for project development:
-- The system state is lost on every power down, you should load/save the state on disk (or other method)
-- Keep the system running while updates are pending
+To integrate Morpheus to your project, you still have too keep in mind the following considerations:
+- The system state is lost on every power down, you should load/save the state on disk (or other method),
+- You may want to keep the system running while updates are pending (this is done with the `-w` flag on the helper script).
 
 
 ### Improvements
 
-- Putting the Pico in deep sleep to preserve even more power
-- Shutting down Pico USB while the Pi is not powered
-- Adding other sources of wake up (I2C sensor threshold value...)
-- Using other low power MCU to do the deep sleep with other capabilities (Pico W, ESP32C3...)
+Morpheus is still in active development, and we already see a some improvement to consider down the road: 
+- Putting the Pico in deep sleep to preserve even more power,
+- Shutting down Pico USB while the Pi is not powered, which should also improve power consumption,
+- Adding other sources of wake up (I2C sensor threshold value...),
+- Using other low power MCU to do the deep sleep with other capabilities (Pico W, ESP32C3...).
+
+If you come with other ideas, you can raise an issue on the project [Morpheus Github Page].
+
+## Resources
+
+You can find here the links to all relevant used projects:
+- [Inkyshot]: [The original Inkyshot project](https://github.com/balenalabs/inkyshot)
+- [^Modified inkyshot]: [Morpheus modified Inkyshot](https://github.com/wolvi-lataniere/inkyshot-morpheus)
+- [Morpheus Firmware]: [Morpheus RaspberryPi Pico Firmware](https://github.com/wolvi-lataniere/morpheus-firmware)
+- [Ready-to-use Morpheus-serial block](https://hub.balena.io/organizations/g_aurelien_valade/blocks/morpheus-serial)
+- [Morpheus Github Page]: [Morpheus Balena Block source code](https://github.com/wolvi-lataniere/morpheus-serial)
