@@ -8,7 +8,7 @@ In this article, we will discuss a **simple approach to enable deep-sleep capabi
 
 ## The study case
 
-During this article, we will use our BalenaLabs [Inkyshot] project, which perfectly fits the intermittent operation, battery operable use case.
+During this article, we will use our BalenaLabs [Inkyshot](#resources) project, which perfectly fits the intermittent operation, battery operable use case.
 
 ![](https://raw.githubusercontent.com/balenalabs-incubator/inkyshot/master/assets/header-photo.jpg)
 
@@ -102,7 +102,7 @@ Note that <span style='color:yellow;'>Yellow</span> wires are the 12V power inpu
 
 #### 1. Setting up the MCU
 
-First things first: we have to program the Pico with the [Morpheus Firmware].
+First things first: we have to program the Pico with the [Morpheus Firmware](#resources).
 
 1. Start by downloading the [pre-complied UF2 File](https://github.com/wolvi-lataniere/morpheus-firmware/releases/download/v0.1.0/morpheus-serial-v0.1.0.uf2).
 
@@ -114,7 +114,7 @@ First things first: we have to program the Pico with the [Morpheus Firmware].
 
 #### 2. Prepare the hardware
 
-Second step it to build the project is to create the hardware assembly according to the [Architecture] diagram.
+Second step it to build the project is to create the hardware assembly according to the [Architecture](#architecture) diagram.
 
 **IMPORTANT NOTE: You should set the correct output voltage (5V) using a multimeter BEFORE connecting the supply to the Raspberry Pi.**
 
@@ -190,13 +190,13 @@ done
 
 ## Results
 
-In order to qualify the consumption improvement on this system, we did some measurements on a standard _Inkyshot_ project[^Inkyshot], and on an _Morpheus_ modified one [^Modified inkyshot].
+In order to qualify the consumption improvement on this system, we did some measurements on a standard _Inkyshot_ project, and on an _Morpheus_ modified one.
 
 ### Measurement method
 
 In order to measure the power consumption, we hooked a 0.47Ohms resistor in series with the 12V power supply, we then measured the drop voltage across that resistor during operation.
 The tested hardware is:
-- A Raspberry Pi Pico running [Morpheus Firmware] v0.1.0,
+- A Raspberry Pi Pico running [Morpheus Firmware](#resources) v0.1.0,
 - A Raspberry Pi 3 B+ running the project,
 - A Waveshare 2.13" EInk display Pi Hat,
 - A controlled and un-controlled (for the Pico) 5V power supply composed of 2 independent _Weewooday-5825_ modules.
@@ -257,13 +257,14 @@ Morpheus is still in active development, and we already see a some improvement t
 - Adding other sources of wake up (I2C sensor threshold value...),
 - Using other low power MCU to do the deep sleep with other capabilities (Pico W, ESP32C3...).
 
-If you come with other ideas, you can raise an issue on the project [Morpheus Github Page].
+If you come with other ideas, you can raise an issue on the project [Morpheus Github Page](https://github.com/wolvi-lataniere/morpheus-serial).
 
 ## Resources
 
 You can find here the links to all relevant used projects:
-- [Inkyshot]: [The original Inkyshot project](https://github.com/balenalabs/inkyshot)
-- [^Modified inkyshot]: [Morpheus modified Inkyshot](https://github.com/wolvi-lataniere/inkyshot-morpheus)
-- [Morpheus Firmware]: [Morpheus RaspberryPi Pico Firmware](https://github.com/wolvi-lataniere/morpheus-firmware)
+
+- [The original Inkyshot project](https://github.com/balenalabs/inkyshot)
+- [Morpheus modified Inkyshot](https://github.com/wolvi-lataniere/inkyshot-morpheus)
+- [Morpheus RaspberryPi Pico Firmware](https://github.com/wolvi-lataniere/morpheus-firmware)
 - [Ready-to-use Morpheus-serial block](https://hub.balena.io/organizations/g_aurelien_valade/blocks/morpheus-serial)
-- [Morpheus Github Page]: [Morpheus Balena Block source code](https://github.com/wolvi-lataniere/morpheus-serial)
+- [Morpheus Balena Block source code](https://github.com/wolvi-lataniere/morpheus-serial)
