@@ -225,6 +225,8 @@ The total average consumption of this version is about **0.438W** for our 30min 
 
 If we expand the sleep cycles to one hour instead of 30 min however, we get an average consumption of **0.309W**, the refresh rate having a huge impact on power consumption.
 
+Initially, the inkyshot project is designed to update only once a day. With this setting, the benefit is even greater: the average power consumption drops to **0.176W**.
+
 ### Equivalent battery life
 
 The battery life will vastly depend on a large number of factors, starting with:
@@ -236,10 +238,10 @@ The battery life will vastly depend on a large number of factors, starting with:
 
 For our use case, with a 30min sleep period, and with the selected components we have, we can approximate:
 
-| Battery                 | Without Morpheus  |  With Morpheus (30min) | With Morpheus (60min) |
-|-------------------------|-------------------|------------------------|-----------------------|
-| 12V 7.2Ah lead battery  |       43h         |     ~197h = ~8days     |   ~279h = ~11.6 days  |
-| 2xCR18650: 7.2V 3Ah     |       10h         |      49h               |         ~70h          | 
+| Battery                 | Without Morpheus  |  With Morpheus (30min) | With Morpheus (60min) | With Morpheus (24h) |
+|-------------------------|-------------------|------------------------|-----------------------|---------------------|
+| 12V 7.2Ah lead battery  |       43h         |     ~197h = ~8days     |   ~279h = ~11.6 days  |  490h = ~20.4 days  | 
+| 2xCR18650: 7.2V 3Ah     |       10h         |      49h               |         ~70h          |  ~122h = ~5 days    |
 
 
 **Note:** These values are broad approximations based on nominal values, not taking into account efficiency variation with voltage, nor voltage variation during the battery life cycle.
@@ -247,6 +249,8 @@ For our use case, with a 30min sleep period, and with the selected components we
 ## Discussion
 
 We saw that adding a deep sleep capability to your project is a major improvement for battery operation, giving in our use-case scenario a x5 to x7 improvement in battery life. In order to be effective, you still have to finetune your project life-cycle. As we can see, the refresh rate has a major impact on the battery life when sleeping.
+
+One of the main surprises for me during the tests was the amount of power consumed by the start-up process of the Pi. The Pi consumes about twice as much power when starting than in normal idle state (as observed from the original Inkyshot test). This, coupled with the start-up time of about 100 seconds makes the boot-up process draw most of the energy of the project when using Morpheus. This alone could make the project irrelevant for short sleep periods. At this point, finding a way to speed-up the startup process could be the best way to improve the project battery life (still considering the Pi sleeps using Morpheus).
 
 To integrate Morpheus into your project, you still have to keep in mind the following considerations:
 - As the system state is lost on every power down, you should load/save the state on disk (or other method),
