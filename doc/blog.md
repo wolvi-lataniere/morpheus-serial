@@ -4,7 +4,13 @@ Single board computers (SBCs) are awesome, small, low-power devices, often with 
 
 However, when calculating your energy budget, you often come to realize they are not quite low power enough to accommodate small batteries, running over a long time (multiple days/months). We often don't need full-time availability, so why not **put our computer to sleep to improve our project battery life**?
 
-In this article, I will show you a **simple approach to enable deep-sleep capability** on your next battery powered Raspberry Pi (or any SBC-powered) project, using the _balenaBlock_ Morpheus I created as part of my [balenaLabs Residency](https://www.balena.io/blog/balenalabs-residencies-our-quest-to-improve-onboarding-at-balena/).
+In this article, I will show you how I **added the Morpheus balenaBlock** I created as part of my [balenaLabs Residency] to our [Inkyshot](#resources) project. It can be used as a **simple approach to enable deep-sleep capability** on your next battery powered Raspberry Pi (or any SBC-powered) project.
+
+## balenaLabs Residency
+
+Here at Balena, we are convinced of the benefits of [dogfooding](https://en.wikipedia.org/wiki/Eating_your_own_dog_food). Every new team member starts his/her time on-board with a [Residency project](https://www.balena.io/blog/balenalabs-residencies-our-quest-to-improve-onboarding-at-balena/). In few words, we choose a project to build in the open using Balena technology from a user point of view.
+
+At the end of the residency, write a blog post (which you are currently reading) to present the result of our experimentations to the public, and bring our own brick to the open-source community. It is a really good way to be introduced to the different layers of products we will be working on, their strengths, and improvement we can do to make them even better.
 
 ## The study case
 
@@ -16,10 +22,9 @@ Here's a quick overview of what Inkyshot does, the project at startup will *conn
 
 This project is perfect for battery operation because *eInk display retains the display without power*, which allows us to power down the system entirely to save battery.
 
-
 ## Bill of materials
 
-To reproduce this project, you will need:
+To reproduce this project, you will need some hardware:
 - A Raspberry Pi compatible SBC,
 - A SD card,
 - A [Raspberry Pi Pico](https://www.raspberrypi.com/products/raspberry-pi-pico/) micro-controller board,
@@ -30,7 +35,7 @@ To reproduce this project, you will need:
 - A way to connect to your power source (alligator clips, barrel jack...),
 - A perf board to mount everything together (optional).
 
-You will also need:
+You will also need some tools:
 - A soldering iron,
 - Some solder,
 - Some wires to connect everything.
@@ -38,7 +43,7 @@ You will also need:
 Finally, on the software side, you need:
 - A [balenaCloud account](https://dashboard.balena-cloud.com),
 - [balenaEtcher](https://www.balena.io/etcher/) to flash your SDCard with the fleet image,
-- Join the [Inkyshot Morpheus Edition](https://hub.balena.io/organizations/g_aurelien_valade/fleets/inkyshot-morpheus-edition) fleet.
+- Join or fork the [Inkyshot Morpheus Edition](https://hub.balena.io/organizations/g_aurelien_valade/fleets/inkyshot-morpheus-edition) fleet.
 
 ## Our goal
 
@@ -81,7 +86,7 @@ I've developed Morpheus as a _balenaBlock_ to help you integrate it in your own 
 
 ### Architecture
 
-The Raspberry Pi Pico (called **Pico** here-after) is a $4 Micro-Controller Unit (MCU) development board, powered by an ultra low power 133MHz Dual Cortex-M0+ processor, with 2MB Flash storage for the program and 264kB of internal RAM and USB communication capabilities. This doesn't seems much compared to the Gigabytes of RAM and storage of the Raspberry Pi 3 (called **Pi** here-after) , and to its multi GHz processors, but this is plenty enough to turn ON and OFF a power supply, keep track of time or read sensors data... and all this for a fraction of the Pi power budget (450mW under full load, down to 6.5mW in sleep mode, compared to the 10+W rating of the Raspberry Pi 4 without sleep capability).
+The Raspberry Pi Pico (called **Pico** here-after) is a $4 Micro-Controller Unit (MCU) development board, powered by an ultra low power 133MHz Dual Cortex-M0+ processor, with 2MB Flash storage for the program and 264kB of internal RAM and USB communication capabilities. This doesn't seems much compared to the Gigabytes of RAM and storage of the Raspberry Pi 3 (called **Pi** here-after), and to its multi GHz processors, but this is plenty enough to turn ON and OFF a power supply, keep track of time or read sensors data... and all this for a fraction of the Pi power budget (450mW under full load, down to 6.5mW in sleep mode, compared to the 10+W rating of the Raspberry Pi 4 without sleep capability).
 
 The final wiring will follow this diagram:
 
@@ -120,6 +125,20 @@ First things first: we have to program the Pico with the [Morpheus Firmware](#re
 
 Second step is to build the project is to create the hardware assembly according to the [Architecture](#architecture) diagram.
 
+- First, if you plan to use a _LM2596S_, you should [modify your power supply](https://github.com/wolvi-lataniere/morpheus-serial/blob/blog_post/doc/control_lm2596s_enable.md) to enable control input,
+- If you are using a variable regulator, **ENSURE ITS OUTPUT VOLTAGE IS SET TO 5.0V OR YOU WILL BURN YOUR PI**,
+- Then you should choose your support for the project (a breadboard, a prototyping PCB...),
+- Finally, you want to connect the boards according to the [Architecture](#architecture) schematic :
+   - The Pico is powered through a regulated uncontrolled (always on) 5V power regulator,
+   - The Pico controls the Pi switching power supply through its GPIO2 pin,
+   - The Pico USB port is connected to one of the Pi USB type A ports,
+   - The Pi is powered by its power input, connected to the controlled switching power supply,
+   - The whole system (both regulators inputs) is powered by your main power source, in the 6.5 to 12V range (12V power supply, battery...).
+
+At this point, this is probably a good time to setup your Pi with your Balena Account [creating a new fleet, add your device, and provision it](https://www.balena.io/docs/learn/getting-started/raspberrypi3/nodejs/#create-a-fleet).
+
+*If you only want to use the inkyshot project, you also can [join the fleet](https://hub.balena.io/organizations/g_aurelien_valade/fleets/inkyshot-morpheus-edition) and skip the whole development part below.*
+
 **IMPORTANT NOTE: You should set the correct output voltage (5V) using a multimeter BEFORE connecting the supply to the Raspberry Pi.**
 
 #### 3. Adding the block to your project
@@ -152,7 +171,9 @@ You can adjust the `SERIAL_PORT` variable value, and the shared device if needed
 
 #### 3. Using the API
 
-The morpheus block exposes a REST API on its TCP port 5555. The [API documentation](./api.md) exposes available commands.
+Once the Morpheus balenaBlock is running, it exposes a simple [HTTP REST API](./api.md) on port 5555 to communicate with the Pico. To communicate with the Pico you can:
+- use the API directly (with CURL for instance) according to the relevant [Documentation](./api.md) (CURL examples are provided in the API documentation),
+- use the [CLI helper script](#using-the-cli-script) we provide to help with the API calls.
 
 #### 4. Using the CLI script
 
@@ -179,7 +200,7 @@ For `inkyshot` we replaced the `cron` part of the `inkyshot/start.sh` script by 
 
 ```
 # Request sleep for 1h
-./morpheus.sh -a ${MORPHEUS_ADDR} -w TimeSleep 1800
+./morpheus.sh -a ${MORPHEUS_ADDR} -w TimeSleep 3600
 
 # Clean turn-off
 curl -X POST --header "Content-Type:application/json" \
@@ -191,6 +212,11 @@ do
   sleep 1h
 done
 ```
+
+The `morpheus.sh` parameters can be altered as follows:
+- `-a ${MORPHEUS_ADDR}` is the IP address/hostname of the Mortheus _balenaBlock_,
+- `-w` flag tells the helper to wait for the _balena supervisor_ to connect to the cloud, check for updates (and apply them if needed) before sending sleep request,
+- `TimeSleep 3600` requests a time-based sleep of 3600 seconds (1h). This option can also be `InputSleep false` to wake up when GPIO3 pin is set `LOW` (internal Pull-up resistor is set by default).
 
 ## Results
 
