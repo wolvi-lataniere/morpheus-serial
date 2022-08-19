@@ -42,7 +42,7 @@ You will also need some tools:
 - A multimeter to set your regulator voltage to 5V. 
 
 Finally, on the software side, you need:
-- A [balenaCloud account](https://dashboard.balena-cloud.com),
+- A [balenaCloud account](https://dashboard.balena-cloud.com) (Your first 10 devices are always free and full-featured),
 - [balenaEtcher](https://www.balena.io/etcher/) to flash your SDCard with the fleet image,
 - Join or fork the [Inkyshot Morpheus Edition](https://hub.balena.io/organizations/g_aurelien_valade/fleets/inkyshot-morpheus-edition) fleet.
 
@@ -124,7 +124,7 @@ First things first: we have to program the Pico with the [Morpheus Firmware](#re
 
 #### 2. Prepare the hardware
 
-Second step is to build the project is to create the hardware assembly according to the [Architecture](#architecture) diagram.
+The second step to build the project is to create the hardware assembly according to the [Architecture](#architecture) diagram.
 
 - First, if you plan to use a _LM2596S_, you should [modify your power supply](https://github.com/wolvi-lataniere/morpheus-serial/blob/blog_post/doc/control_lm2596s_enable.md) to enable control input,
 - If you are using a variable regulator, **ENSURE ITS OUTPUT VOLTAGE IS SET TO 5.0V OR YOU WILL BURN YOUR PI**,
@@ -136,7 +136,7 @@ Second step is to build the project is to create the hardware assembly according
    - The Pi is powered by its power input, connected to the controlled switching power supply,
    - The whole system (both regulators inputs) is powered by your main power source, in the 6.5 to 12V range (12V power supply, battery...).
 
-At this point, this is probably a good time to setup your Pi with your Balena Account [creating a new fleet, add your device, and provision it](https://www.balena.io/docs/learn/getting-started/raspberrypi3/nodejs/#create-a-fleet).
+At this point, this is probably a good time to setup your Pi with your balenaCloud Account [creating a new fleet, add your device, and provision it](https://www.balena.io/docs/learn/getting-started/raspberrypi3/nodejs/#create-a-fleet).
 
 *If you only want to use the inkyshot project, you also can [join the fleet](https://hub.balena.io/organizations/g_aurelien_valade/fleets/inkyshot-morpheus-edition) and skip the whole development part below.*
 
