@@ -1,35 +1,35 @@
 # Enabling deep sleep for your Raspberry Pi project
 
-Single board computers (SBCs) are awesome, small, low-power devices, often with wireless connectivity, which makes them ideal for simple **battery operated projects**.
+Single board computers (SBCs) are awesome, small, low-power devices (under 15W, 1-4 cores <2GHz ARM CPU), often with wireless connectivity, which makes them ideal for simple **battery operated projects**.
 
 However, when calculating your energy budget, you often come to realize they are not quite low power enough to accommodate small batteries, running over a long time (multiple days/months). We often don't need full-time availability, so why not **put our computer to sleep to improve our project battery life**?
 
-In this article, I will show you how I **added the Morpheus balenaBlock** I created as part of my [balenaLabs Residency] to our [Inkyshot](#resources) project. It can be used as a **simple approach to enable deep-sleep capability** on your next battery powered Raspberry Pi (or any SBC-powered) project.
+In this article, I will show you how I **added the Morpheus balenaBlock** I created as part of my [balenaLabs Residency] to our [Inkyshot](#https://github.com/balenalabs/inkyshot) project. It can be used as a **simple approach to enable deep-sleep capability** on your next battery powered Raspberry Pi (or any SBC-powered) project.
 
 ## balenaLabs Residency
 
-Here at Balena, we are convinced of the benefits of [dogfooding](https://en.wikipedia.org/wiki/Eating_your_own_dog_food). Every new team member starts his/her time on-board with a [Residency project](https://www.balena.io/blog/balenalabs-residencies-our-quest-to-improve-onboarding-at-balena/). In few words, we choose a project to build in the open using Balena technology from a user point of view.
+Here at Balena, we are convinced of the benefits of [dogfooding](https://en.wikipedia.org/wiki/Eating_your_own_dog_food). Every new team member starts their time on-board with a [Residency project](https://www.balena.io/blog/balenalabs-residencies-our-quest-to-improve-onboarding-at-balena/). In a few words, we choose a project to build in the open using Balena technology from a user point of view.
 
-At the end of the residency, write a blog post (which you are currently reading) to present the result of our experimentations to the public, and bring our own brick to the open-source community. It is a really good way to be introduced to the different layers of products we will be working on, their strengths, and improvement we can do to make them even better.
+At the end of the residency, write a blog post (which you are currently reading) to present the result of our experimentations to the public, and add our own brick to the open-source community. It is a really good way to be introduced to the different layers of products we will be working on, discovering their strengths, and identifying improvements we can do to make them even better.
 
 ## The study case
 
-To demonstrate how it works, I have used our BalenaLabs [Inkyshot](#resources) project, which perfectly fits the intermittent operation, battery operable use case.
+To demonstrate how it works, I have used our BalenaLabs [Inkyshot](https://github.com/balenalabs/inkyshot) project, which perfectly fits the intermittent operation, battery operable use case.
 
 ![](https://raw.githubusercontent.com/balenalabs-incubator/inkyshot/master/assets/header-photo.jpg)
 
-Here's a quick overview of what Inkyshot does, the project at startup will *connect to the internet, pull a new inspirational quote, or your local weather, and then will update the eInk display*, this process is repeated once in a while (generally once every hour), staying idle the rest of the time.
+Here's a quick overview of what Inkyshot does, the project at startup will *connect to the Internet, pull a new inspirational quote, or your local weather, and then will update the eInk display*, this process is repeated once in a while (generally once every hour), staying idle the rest of the time.
 
 This project is perfect for battery operation because *eInk display retains the display without power*, which allows us to power down the system entirely to save battery.
 
-## Bill of materials
+## Requirements
 
 To reproduce this project, you will need some hardware:
 - A Raspberry Pi compatible SBC,
-- A SD card,
+- An SD card,
 - A [Raspberry Pi Pico](https://www.raspberrypi.com/products/raspberry-pi-pico/) micro-controller board,
 - A voltage regulator with enable pin (we used _Weewooday-5825_ found on Amazon, but you can also [convert a LM2596S kit](./control_lm2596s_enable.md)),
-- A [Inky pHat](https://shop.pimoroni.com/products/inky-phat?variant=12549254217811) or [Waveshare 2.13"](https://www.waveshare.com/2.13inch-e-paper-hat.htm) eInk display module,
+- An [Inky pHat](https://shop.pimoroni.com/products/inky-phat?variant=12549254217811) or [Waveshare 2.13"](https://www.waveshare.com/2.13inch-e-paper-hat.htm) eInk display module,
 - 2 USB-A to Micro-USB cables (or one + one A to C if using a Pi4),
 - A power source in the 6-12V range, with at least 1A capability (depending on the Raspberry you chose),
 - A way to connect to your power source (alligator clips, barrel jack...),
@@ -38,7 +38,8 @@ To reproduce this project, you will need some hardware:
 You will also need some tools:
 - A soldering iron,
 - Some solder,
-- Some wires to connect everything.
+- Some wires to connect everything,
+- A multimeter to set your regulator voltage to 5V. 
 
 Finally, on the software side, you need:
 - A [balenaCloud account](https://dashboard.balena-cloud.com),
@@ -50,7 +51,7 @@ Finally, on the software side, you need:
 To keep power consumption as low as possible, the best approach is to:
 
 1. Start our system,
-2. <span style="color:gray">_Connect to the internet (optional, depending on the project requirement)_</span>,
+2. <span style="color:gray">_Connect to the Internet (optional, depending on the project requirement)_</span>,
 3. <span style="color:gray">_Load our project state from storage (optional, depending on the project requirement)_</span>,
 4. Do our project processing, updates, communications...,
 5. Program our next wake up conditions,
@@ -62,7 +63,7 @@ To keep power consumption as low as possible, the best approach is to:
 If we apply it to our use-case, we want to:
 
 1. Start our system at power-up,
-2. Connect to the internet,
+2. Connect to the Internet,
 3. Pull our data and update the display,
 4. Program a 1h sleep period,
 5. Go into deep sleep,
@@ -200,7 +201,7 @@ For `inkyshot` we replaced the `cron` part of the `inkyshot/start.sh` script by 
 
 ```
 # Request sleep for 1h
-./morpheus.sh -a ${MORPHEUS_ADDR} -w TimeSleep 3600
+./morpheus.sh -a ${MORPHEUS_ADDR} -w TimeSleep ${TIMESLEEP:-3600}
 
 # Clean turn-off
 curl -X POST --header "Content-Type:application/json" \
@@ -216,7 +217,7 @@ done
 The `morpheus.sh` parameters can be altered as follows:
 - `-a ${MORPHEUS_ADDR}` is the IP address/hostname of the Mortheus _balenaBlock_,
 - `-w` flag tells the helper to wait for the _balena supervisor_ to connect to the cloud, check for updates (and apply them if needed) before sending sleep request,
-- `TimeSleep 3600` requests a time-based sleep of 3600 seconds (1h). This option can also be `InputSleep false` to wake up when GPIO3 pin is set `LOW` (internal Pull-up resistor is set by default).
+- `TimeSleep ${TIMESLEEP:-3600}` requests a time-based sleep of TIMESLEEP seconds (Which can be set as a _Device Variable_, and defaults to 3600s = 1h). This option can also be `InputSleep false` to wake up when GPIO3 pin is set `LOW` (internal Pull-up resistor is set by default).
 
 ## Results
 
@@ -224,7 +225,7 @@ In order to qualify the consumption improvement on this system, we did some meas
 
 ### Measurement method
 
-In order to measure the power consumption, we hooked a 0.47Ohms resistor in series with the 12V power supply, we then measured the drop voltage across that resistor during operation.
+In order to measure the power consumption, we hooked a 0.47Ohms resistor in series with the 12V power supply, and then measured the drop voltage across that resistor during operation.
 The tested hardware is:
 - A Raspberry Pi Pico running [Morpheus Firmware](#resources) v0.1.0,
 - A Raspberry Pi 3 B+ running the project,
