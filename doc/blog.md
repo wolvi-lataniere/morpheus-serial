@@ -22,7 +22,7 @@ Here's a quick overview of what Inkyshot does, the project at startup will *conn
 
 This project is perfect for battery operation because *eInk display retains the display without power*, which allows us to power down the system entirely to save battery.
 
-## Requirements
+## Hardware requirements
 
 To reproduce this project, you will need some hardware:
 - A Raspberry Pi compatible SBC,
@@ -40,6 +40,8 @@ You will also need some tools:
 - Some solder,
 - Some wires to connect everything,
 - A multimeter to set your regulator voltage to 5V. 
+
+## Software requirements
 
 Finally, on the software side, you need:
 - A [balenaCloud account](https://dashboard.balena-cloud.com) (Your first 10 devices are always free and full-featured),
@@ -114,7 +116,7 @@ Note that <span style='color:yellow;'>Yellow</span> wires are the 12V power inpu
 
 First things first: we have to program the Pico with the [Morpheus Firmware](#resources).
 
-1. Start by downloading the [pre-complied UF2 File](https://github.com/wolvi-lataniere/morpheus-firmware/releases/download/v0.1.0/morpheus-serial-v0.1.0.uf2).
+1. Start by downloading the [pre-complied UF2 File](https://github.com/wolvi-lataniere/morpheus-firmware/releases/download/v0.1.1/morpheus-serial-v0.1.1.uf2).
 
 2. Then, connect the Pico to your computer with a USB cable, **while keeping the BOOTSEL button pressed**. A new USB disk drive called `RPI-RP2` should appear.
 
