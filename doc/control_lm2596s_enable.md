@@ -103,8 +103,19 @@ Ether way, you should start by:
 - Solder a control wire to the lifted pin,
 - I recommend you add some kind of insulation (electric tape, heat-shrink tube...) to prevent the wire or the lifted pin to touch anything else.
 
-Then, if you want to control the circuit with non-inverted logic (control pin to 0 to turn OFF the regulator), you have to build a simple logic inverter gate. This is easily done with a simple NPN transistor (here, I use a BC547) and two resistors (4.7k):
+Then, if you want to control the circuit with non-inverted logic (control pin to 0 to turn OFF the regulator), you have to build a simple logic inverter gate. This is easily done with a simple NPN transistor (here, I use a BC547, so pins are in Collector-Base-Emitter order) and two resistors (4.7k):
 
 ![](./images/NPN_Inverter_bb.png)
 
-**TODO: Write an article to describe how to convert a LM2596S module from amazon to be controlled by a MCU**
+- The Input Voltage (Yellow Wire) can ether be connected to your MCU VCC (3V3 or 5V) or to the regulator input voltage,
+- The Control Input (Green Wire) is connected to the MCU output pin you want to use to control the regulator,
+- The Output (Blue Wire) is connected to the regulator control input (the Pin 5 wire we just soldered),
+- The Ground (Black Wire) is connected to the common ground (MCU and regulator ground).
+
+In this configuration, setting the control input high (3V3 or 5V) will turn on the regulator. Setting it low (0V) will turn it OFF.
+
+**IMPORTANT: YOU MUST SET THE TRIMMER TO HAVE THE DESIRED OUTPUT VOLTAGE BEFORE CONNECTING TO YOUR PROJECT!**
+
+## Conclusion
+
+You now have a power regulator that can be controlled via a small current to power your projects. This can be useful in a large panel of embedded applications where power saving is a critical part of any good design.
