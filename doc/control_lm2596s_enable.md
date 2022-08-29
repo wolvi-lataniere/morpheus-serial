@@ -60,14 +60,18 @@ Enable Pin. Drive EN pin high to turn on the device, drive it low to turn it off
 From where, the process is quite simple:
 - Take your soldering iron and heat-up pin 4 (you can add some solder of flux to help melting the current solder),
 - Lift pin 4 with a small tool (I use an precision hobby knife),
+
 ![](./images/XL4005E-LiftThePin.jpg)
+
 - Solder the control wire to the lifted pin,
+
 ![](./images/XL4005E-SolderTheWire.jpg)
+
 - I recommend you add some kind of insulation (electric tape, heat-shrink tube...) to prevent the wire or the lifted pin to touch anything else.
 
 **NOTE**: the _XL4005E_ chip seems to have internal pull-up resistor which makes the regulator active when not connected. It is however recommended to connect it either to a high (>1.4V) or low (<0.8V) signal for reliable usage.
 
-At this point, your controllable supply is ready to use in your project.
+At this point, your controllable supply is ready to use in your project. Connect the added wire to GND to turn OFF the power supply and to VCC (any voltage in the between 1.4V and the input voltage) to turn it ON. This setup allows to control your project power input from a low power micro-controller to save power.
 
 **IMPORTANT: YOU MUST SET THE TRIMMER TO HAVE THE DESIRED OUTPUT VOLTAGE BEFORE CONNECTING TO YOUR PROJECT!**
 
@@ -93,9 +97,14 @@ You can choose to directly drive it that way (which might require changing your 
 
 Ether way, you should start by:
 - De-soldering pin 5 by heating it up with your soldering iron and lifting it with a small tool,
+
 ![](./images/LM2596S-LiftThePin.jpg)
+
 - Solder a control wire to the lifted pin,
 - I recommend you add some kind of insulation (electric tape, heat-shrink tube...) to prevent the wire or the lifted pin to touch anything else.
 
+Then, if you want to control the circuit with non-inverted logic (control pin to 0 to turn OFF the regulator), you have to build a simple logic inverter gate. This is easily done with a simple NPN transistor (here, I use a BC547) and two resistors (4.7k):
+
+![](./images/NPN_Inverter_bb.png)
 
 **TODO: Write an article to describe how to convert a LM2596S module from amazon to be controlled by a MCU**
