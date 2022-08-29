@@ -20,7 +20,7 @@ To demonstrate how it works, I have used our BalenaLabs [Inkyshot](https://githu
 
 Here's a quick overview of what Inkyshot does, the project at startup will *connect to the Internet, pull a new inspirational quote, or your local weather, and then will update the eInk display*, this process is repeated once in a while (generally once every hour), staying idle the rest of the time.
 
-This project is perfect for battery operation because *eInk display retains the display without power*, which allows us to power down the system entirely to save battery.
+This project is perfect for battery operation because an *eInk display retains the display without power*, which allows us to power down the system entirely to save battery.
 
 ## Hardware requirements
 
@@ -83,13 +83,15 @@ To reduce the power consumption, a common approach in embedded systems is to cut
 
 Here enters _Morpheus_.
 
-_Morpheus_ (named after the [greek god of sleep and dreams](https://en.wikipedia.org/wiki/Morpheus)), is a Raspberry Pi Pico based project designed to interface between your Raspberry Pi power supply and your Raspberry Pi. 
+_Morpheus_ (named after the [greek god of sleep and dreams](https://en.wikipedia.org/wiki/Morpheus)), is a Raspberry Pi Pico based project designed to interface between your Raspberry Pi power supply and your Raspberry Pi. Even if not the most energy efficient MCU (1mA sleep current is higher than most STM32 or equivalent MCUs), the Raspberry Pi Pico is far less energy hungry than a Raspberry Pi, and readily available at low cost ($4 from most retailers) even during current chip shortage, which makes it a good option to improve your project.
+
+A far more energy efficient option for this project would have been to re-implement Inkyshot functions on a lower power device like the ESP32-C3 System-on-Chip, with proper deep-sleep, this solution would last months on a single CR18650 battery. However, the idea here is to enable higher computational power when active for more complex operations, while keeping development simple and power consumption in check. 
 
 I've developed Morpheus as a _balenaBlock_ to help you integrate it in your own projects.
 
 ### Architecture
 
-The Raspberry Pi Pico (called **Pico** here-after) is a $4 Micro-Controller Unit (MCU) development board, powered by an ultra low power 133MHz Dual Cortex-M0+ processor, with 2MB Flash storage for the program and 264kB of internal RAM and USB communication capabilities. This doesn't seems much compared to the Gigabytes of RAM and storage of the Raspberry Pi 3 (called **Pi** here-after), and to its multi GHz processors, but this is plenty enough to turn ON and OFF a power supply, keep track of time or read sensors data... and all this for a fraction of the Pi power budget (450mW under full load, down to 6.5mW in sleep mode, compared to the 10+W rating of the Raspberry Pi 4 without sleep capability).
+The Raspberry Pi Pico (called **Pico** here-after) is a $4 Micro-Controller Unit (MCU) development board, powered by an ultra low power 133MHz Dual Cortex-M0+ processor, with 2MB Flash storage for the program and 264kB of internal RAM and USB communication capabilities. This doesn't seem much compared to the Gigabytes of RAM and storage of the Raspberry Pi 3 (called **Pi** here-after), and to its multi GHz processors, but this is plenty enough to turn ON and OFF a power supply, keep track of time or read sensors data... and all this for a fraction of the Pi power budget (450mW under full load, down to 6.5mW in sleep mode, compared to the 10+W rating of the Raspberry Pi 4 without sleep capability).
 
 The final wiring will follow this diagram:
 
@@ -277,7 +279,7 @@ For our use case, with a 30min sleep period, and with the selected components we
 
 ## Discussion
 
-We saw that adding a deep sleep capability to your project is a major improvement for battery operation, giving in our use-case scenario a x5 to x7 improvement in battery life. In order to be effective, you still have to finetune your project life-cycle. As we can see, the refresh rate has a major impact on the battery life when sleeping.
+We saw that adding a deep sleep capability to your project is a major improvement for battery operation, giving in our use-case scenario a x5 to x7 improvement in battery life. In order to be effective, you still have to fine tune your project life-cycle. As we can see, the refresh rate has a major impact on the battery life when sleeping.
 
 One of the main surprises for me during the tests was the amount of power consumed by the start-up process of the Pi. The Pi consumes about twice as much power when starting than in normal idle state (as observed from the original Inkyshot test). This, coupled with the start-up time of about 100 seconds makes the boot-up process draw most of the energy of the project when using Morpheus. This alone could make the project irrelevant for short sleep periods. At this point, finding a way to speed-up the startup process could be the best way to improve the project battery life (still considering the Pi sleeps using Morpheus).
 
